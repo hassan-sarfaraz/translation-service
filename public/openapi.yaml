@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: Translation Management Service API
+  version: 1.0.0
+  description: High-performance, scalable translation management API supporting token auth, bulk indexing, and CDN-ready JSON exports.
+servers:
+  - url: http://localhost:8000/api
+    description: Local Server
+paths:
+  /translations:
+    get:
+      summary: Search and list translations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: locale
+          in: query
+          schema:
+            type: string
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: key
+          in: query
+          schema:
+            type: string
+        - name: content
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated translations list
+    post:
+      summary: Create a translation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [locale, key, content]
+              properties:
+                locale:
+                  type: string
+                  example: "en"
+                key:
+                  type: string
+                  example: "auth.login.title"
+                content:
+                  type: string
+                  example: "Sign In to Your Account"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["web", "auth"]
+      responses:
+        '201':
+          description: Translation created
+        '422':
+          description: Validation error
+
+  /translations/{id}:
+    get:
+      summary: Get single translation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Translation detail
+    put:
+      summary: Update translation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Translation updated
+
+  /translations/export/{locale}:
+    get:
+      summary: Export cached translations for frontend applications
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "en"
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "web"
+      responses:
+        '200':
+          description: Flat key-value translation map
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: "public, max-age=3600, stale-while-revalidate=60"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
